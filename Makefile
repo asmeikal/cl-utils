@@ -52,7 +52,7 @@ all: $(LIBS) $(TEST_BINS)
 
 $(TEST_BINS): $(LIBS) $(TEST_OBJS)
 	test -d $(TEST_BIN_DIR) || mkdir -p $(TEST_BIN_DIR)
-	$(CC) $(CFLAGS) $(BIN_FLAGS) $(TEST_OBJ_DIR)/$(@F).o $(LIBRARIES) -l$(LIB_NAME) -lmlutils -lmclabutils -o $@
+	$(CC) $(CFLAGS) $(BIN_FLAGS) $(TEST_OBJ_DIR)/$(@F).o $(LIBRARIES) -l$(LIB_NAME) -lmlutils -lMCLabUtils -o $@
 
 $(TEST_OBJS):
 	test -d $(TEST_OBJ_DIR) || mkdir -p $(TEST_OBJ_DIR)
