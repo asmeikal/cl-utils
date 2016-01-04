@@ -12,6 +12,15 @@
 #include <assert.h>
 #include "opencl.h"
 
+#define CLUT_CHECK_ERROR(r,s,e)	\
+	do { \
+		if (!clut_returnSuccess((r))) {\
+			fprintf(stderr, "%s: %s.\n", (s), clut_getErrorDescription((r))); \
+			goto e; \
+		} \
+	} while (0)
+
+
 void clut_checkReturn(const char * const function, cl_int value);
 
 int clut_returnSuccess(cl_int value);
