@@ -13,9 +13,11 @@ TEST_SRC_DIR = $(SRC_DIR)/tests
 TEST_BIN_DIR = $(BIN_DIR)/tests
 TEST_OBJ_DIR = $(OBJ_DIR)/tests
 
-TEST_BINS = $(TEST_BIN_DIR)/main
+TEST_BINS = $(TEST_BIN_DIR)/device_infos \
+			$(TEST_BIN_DIR)/image_formats
 #TEST_FILES =
-TEST_OBJS = $(TEST_OBJ_DIR)/main.o
+TEST_OBJS = $(TEST_OBJ_DIR)/device_infos.o \
+			$(TEST_OBJ_DIR)/image_formats.o
 
 # headers and libraries
 
@@ -54,7 +56,7 @@ $(TEST_BINS): $(LIBS) $(TEST_OBJS)
 	test -d $(TEST_BIN_DIR) || mkdir -p $(TEST_BIN_DIR)
 	$(CC) $(CFLAGS) $(BIN_FLAGS) $(TEST_OBJ_DIR)/$(@F).o $(LIBRARIES) -l$(LIB_NAME) -lmlutils -lMCLabUtils -o $@
 
-$(TEST_OBJS):
+$(TEST_OBJS): $(TEST_SRC_DIR)/$(@F:.o=.c)
 	test -d $(TEST_OBJ_DIR) || mkdir -p $(TEST_OBJ_DIR)
 	$(CC) $(CFLAGS) $(TEST_SRC_DIR)/$(@F:.o=.c) -c -o $@
 
