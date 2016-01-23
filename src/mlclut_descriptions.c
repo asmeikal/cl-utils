@@ -1118,30 +1118,58 @@ const char * clut_getErrorDescription(const cl_int value)
 	switch (value) {
 		case CL_SUCCESS:
 			return "success";
-		case CL_INVALID_PLATFORM:
-			return "invalid platform";
-		case CL_INVALID_DEVICE:
-			return "invalid device";
+		case CL_BUILD_PROGRAM_FAILURE:
+			return "program build failed";
+		case CL_COMPILER_NOT_AVAILABLE:
+			return "compiler not available";
+		case CL_DEVICE_NOT_FOUND:
+			return "no such device";
 		case CL_INVALID_BINARY:
 			return "invalid binary";
 		case CL_INVALID_BUILD_OPTIONS:
 			return "invalid build options";
-		case CL_INVALID_OPERATION:
-			return "invalid operation";
-		case CL_COMPILER_NOT_AVAILABLE:
-			return "compiler not available";
-		case CL_BUILD_PROGRAM_FAILURE:
-			return "program build failed";
+		case CL_INVALID_COMMAND_QUEUE:
+			return "invalid command queue";
+		case CL_INVALID_DEVICE:
+			return "invalid device";
 		case CL_INVALID_DEVICE_TYPE:
 			return "invalid device type";
+		case CL_INVALID_EVENT_WAIT_LIST:
+			return "invalid event wait list";
+		case CL_INVALID_KERNEL:
+			return "invalid kernel";
+		case CL_INVALID_KERNEL_ARGS:
+			return "invalid kernel argument(s)";
+		case CL_INVALID_GLOBAL_OFFSET:
+			return "invalid global offset";
+		case CL_INVALID_GLOBAL_WORK_SIZE:
+			return "invalid global work size";
+//		case CL_INVALID_IMAGE_FORMAT:
+//			return "invalid image format";
+		case CL_INVALID_IMAGE_SIZE:
+			return "invalid image size";
+		case CL_INVALID_OPERATION:
+			return "invalid operation";
+		case CL_INVALID_PLATFORM:
+			return "invalid platform";
+		case CL_INVALID_PROGRAM_EXECUTABLE:
+			return "invalid program executable";
 		case CL_INVALID_VALUE:
 			return "invalid value";
-		case CL_DEVICE_NOT_FOUND:
-			return "no such device";
-		case CL_OUT_OF_RESOURCES:
-			return "failed to allocate resources on device";
+		case CL_INVALID_WORK_DIMENSION:
+			return "invalid work dimension";
+		case CL_INVALID_WORK_GROUP_SIZE:
+			return "invalid work group size";
+		case CL_INVALID_WORK_ITEM_SIZE:
+			return "invalid work item size";
+		case CL_MEM_OBJECT_ALLOCATION_FAILURE:
+			return "failed to allocate memory for image or buffer";
+		case CL_MISALIGNED_SUB_BUFFER_OFFSET:
+			return "misaligned sub buffer object";
 		case CL_OUT_OF_HOST_MEMORY:
 			return "failed to allocate resources on host";
+		case CL_OUT_OF_RESOURCES:
+			return "failed to allocate resources on device";
 		default:
 			return "UNKNOWN ERROR";
 	}
