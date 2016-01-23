@@ -10,6 +10,8 @@
 #include <LineParser.h>
 #include <Vector.h>
 #include <ArrayUtils.h>
+#include <StringUtils.h>
+#include <MLUtils.h>
 
 #include <string.h>
 #include <errno.h>
@@ -268,7 +270,7 @@ error:	return NULL;
  * The path of the file.
  * @return
  */
-cl_program clut_createProgramFromFile(cl_context context, const char * const file)
+cl_program clut_createProgramFromFile(cl_context context, const char * const file, const char * const flags)
 {
 	const char * const fname = "clut_createProgramFromFile";
 	cl_program program;
@@ -301,19 +303,39 @@ cl_program clut_createProgramFromFile(cl_context context, const char * const fil
 		goto clean2;
 	}
 
+	char *build_options;
+	if (NULL != flags) {
+		build_options = calloc(strlen(BUILD_OPTS) + 1 + strlen(flags) + 1, sizeof(char));
+		if (NULL == build_options) {
+			Debug_out(DEBUG_CLUT, "%s: unable to allocate build options string.\n", fname);
+			goto clean2;
+		}
+		strcat(build_options, BUILD_OPTS);
+		strcat(build_options, flags);
+	} else {
+		build_options = StringUtils_clone(BUILD_OPTS);
+		if (NULL == build_options) {
+			Debug_out(DEBUG_CLUT, "%s: unable to clone default build options.\n", fname);
+			goto clean2;
+		}
+	}
+
 	/* build program */
-	ret = clBuildProgram(program, 0, NULL, BUILD_OPTS, NULL, NULL);
+	// 0, NULL -> don't build for specific devices
+	// NULL, NULL -> do not set any callback (thus the function is blocking)
+	ret = clBuildProgram(program, 0, NULL, build_options, NULL, NULL);
 	if (!clut_returnSuccess(ret)) {
 		Debug_out(DEBUG_CLUT, "%s: failed to build program: %s.\n",
 			  fname,
 			  clut_getErrorDescription(ret));
 		clut_printProgramBuildLog(program);
-		goto clean2;
+		goto clean3;
 	}
 
 	Vector_free((void **) source);
 	return program;
 
+clean3:	free(build_options);
 clean2:	clReleaseProgram(program);
 clean1:	Vector_free((void **) source);
 error:	return NULL;
@@ -468,6 +490,43 @@ error:	return;
 }
 
 
+/*!
+ * Callback functions
+ */
+
+/*!
+ * @function clut_createContextCallback
+ */
+void clut_contextCallback(const char *errinfo, const void *private_info, size_t private_info_size, void *user_data)
+{
+	// user_data is a const char * with a useful name for the context
+	const char *context_name = (const char *) user_data;
+
+	Debug_out(DEBUG_CLUT, "%s: %s.\n", context_name, errinfo);
+
+	if (0 < private_info_size) {
+		Debug_out(DEBUG_CLUT, "%s: printing %zu additional bytes of stuff.", context_name, private_info_size);
+		full_print(private_info, private_info_size);
+	}
+}
+
+/*!
+ * @function clut_getEventDuration
+ */
+cl_double clut_getEventDuration(cl_event event)
+{
+	cl_ulong start, end;
+	cl_int ret;
+
+	ret = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+	CLUT_CHECK_ERROR(ret, "Unable to get start time", error);
+	ret = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+	CLUT_CHECK_ERROR(ret, "Unable to get end time", error);
+
+	return (cl_double) (end - start) * ((cl_double) 1e-09);
+
+error:	return (cl_double) 0;
+}
 
 
 

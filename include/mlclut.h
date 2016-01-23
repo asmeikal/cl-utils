@@ -31,8 +31,13 @@ cl_device_id *clut_getAllDevices(cl_platform_id platform, cl_device_type t, cl_u
 void * clut_getDeviceInfo(const cl_device_id device, const cl_device_info info, size_t * const size);
 void * clut_getPlatformInfo(const cl_platform_id platform, const cl_platform_info info, size_t * const size);
 
-cl_program clut_createProgramFromFile(cl_context context, const char * const file);
+cl_program clut_createProgramFromFile(cl_context context, const char * const file, const char * const flags);
 
 void clut_printProgramBuildLog(const cl_program program);
 
+void clut_contextCallback(const char *errinfo, const void *private_info, size_t private_info_size, void *user_data);
+
+cl_double clut_getEventDuration(cl_event event);
+
 #endif
+
