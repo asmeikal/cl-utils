@@ -12,6 +12,11 @@
 #include <assert.h>
 #include "opencl.h"
 
+/*!
+ * The following macro checks if [r] (a cl_int) equals CL_SUCCESS.
+ * If it does not, it prints the string [s], along with a description of [r],
+ * and jumps to [e] (an appropriate error label).
+ */
 #define CLUT_CHECK_ERROR(r,s,e)	\
 	do { \
 		if (!clut_returnSuccess((r))) {\

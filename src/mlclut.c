@@ -23,9 +23,17 @@
 			"-cl-kernel-arg-info " \
 			"-Werror "
 
-void clut_printDeviceProgramBuildLog(cl_device_id device, cl_program program);
+/**
+ * Function declaration
+ */
+
+static void clut_printDeviceProgramBuildLog(cl_device_id device, cl_program program);
 
 /**
+ * Function definition
+ */
+
+/*!
  * @function checkReturn
  * Prints a descriptive string of [value].
  * @param value
@@ -36,7 +44,7 @@ void clut_checkReturn(const char * const function, cl_int value)
 	Debug_out(DEBUG_CLUT, "Return value of '%s' is '%s' (%d).\n", function, clut_getErrorDescription(value), value);
 }
 
-/**
+/*!
  * @function returnSuccess
  * Checks if a function returned with success.
  * @param value
@@ -47,7 +55,7 @@ int clut_returnSuccess(cl_int value)
 	return CL_SUCCESS == value;
 }
 
-/**
+/*!
  * @function clut_getAllPlatforms
  * @warning Result should be manually freed.
  * @param n_p
@@ -98,7 +106,7 @@ clean:	free(platforms);
 error:	return NULL;
 }
 
-/**
+/*!
  * @function clut_getAllDevices
  * @warning Result should be manually freed.
  * @param platform
@@ -153,6 +161,11 @@ clean:	free(devices);
 error:	return NULL;
 }
 
+/*!
+ * @function clut_getDeviceInfo
+ * Retrieves [info] from [device], and returns a pointer to it. [size], if
+ * not NULL, contains the size of the returned value.
+ */
 void * clut_getDeviceInfo(const cl_device_id device,
 			  const cl_device_info info,
 			  size_t * const size)
@@ -207,6 +220,11 @@ clean:	free(result);
 error:	return NULL;
 }
 
+/*!
+ * @function clut_getPlatformInfo
+ * Retrieves [info] from [platform], and returns a pointer to it. [size], if
+ * not NULL, contains the size of the returned value.
+ */
 void * clut_getPlatformInfo(const cl_platform_id platform,
 			    const cl_platform_info info,
 			    size_t * const size)
@@ -261,13 +279,15 @@ clean:	free(result);
 error:	return NULL;
 }
 
-/**
+/*!
  * @function clut_createProgramFromFile
  * Creates and builds a cl_program from the name of a openCL C [file].
  * @param context
  * The cl_context that will be associated with the program.
  * @param file
  * The path of the file.
+ * @param flags
+ * An optional pointer to a string of compile flags.
  * @return
  */
 cl_program clut_createProgramFromFile(cl_context context, const char * const file, const char * const flags)
@@ -311,6 +331,7 @@ cl_program clut_createProgramFromFile(cl_context context, const char * const fil
 			goto clean2;
 		}
 		strcat(build_options, BUILD_OPTS);
+		strcat(build_options, " ");
 		strcat(build_options, flags);
 	} else {
 		build_options = StringUtils_clone(BUILD_OPTS);
@@ -417,7 +438,11 @@ clean1: free(devices);
 error:	return;
 }
 
-void clut_printDeviceProgramBuildLog(cl_device_id device, cl_program program)
+/*!
+ * @function clut_printDeviceProgramBuildLog
+ * Prints the program build log of [program] for [device].
+ */
+static void clut_printDeviceProgramBuildLog(cl_device_id device, cl_program program)
 {
 	const char * const fname = "clut_printDeviceProgramBuildLog";
 	cl_int ret;
@@ -496,6 +521,9 @@ error:	return;
 
 /*!
  * @function clut_createContextCallback
+ * A general callback that can be associated with a context. Prints the message and the bytes
+ * in [private_info], if there are any.
+ * [user_data] is a pointer to a string describing the context.
  */
 void clut_contextCallback(const char *errinfo, const void *private_info, size_t private_info_size, void *user_data)
 {
@@ -512,6 +540,7 @@ void clut_contextCallback(const char *errinfo, const void *private_info, size_t 
 
 /*!
  * @function clut_getEventDuration
+ * Returns the duration, in seconds, as a double, of [event].
  */
 cl_double clut_getEventDuration(cl_event event)
 {
