@@ -62,4 +62,60 @@ void clut_printDeviceInfo(const cl_device_id device, const cl_device_info info);
 
 void clut_printDeviceSupportedImageFormats(const cl_device_id device);
 
+/*!
+ * Print function declaration
+ */
+
+void clut_platformInfo_typedPrint(const cl_platform_info info, const void * const value, const size_t size);
+void clut_deviceInfo_typedPrint(const cl_device_info info, const void * const value, const size_t size);
+
+/* describer functions */
+const char * clut_get_CL_PLATFORM_INFO_Description(const cl_platform_info value);
+const char * clut_get_CL_DEVICE_INFO_Description(const cl_device_info value);
+const char * clut_get_CL_COMMAND_QUEUE_PROPERTIES_Description(const cl_command_queue_properties value);
+const char * clut_get_CL_DEVICE_AFFINITY_DOMAIN_Description(const cl_device_affinity_domain value);
+const char * clut_get_CL_DEVICE_EXEC_CAPABILITIES_Description(const cl_device_exec_capabilities value);
+const char * clut_get_CL_DEVICE_FP_CONFIG_Description(const cl_device_fp_config value);
+const char * clut_get_CL_DEVICE_MEM_CACHE_TYPE_Description(const cl_device_mem_cache_type value);
+const char * clut_get_CL_DEVICE_LOCAL_MEM_TYPE_Description(const cl_device_local_mem_type value);
+const char * clut_get_CL_DEVICE_PARTITION_PROPERTY_Description(const cl_device_partition_property value);
+const char * clut_get_CL_DEVICE_TYPE_Description(const cl_device_type value);
+const char * clut_get_CL_CHANNEL_ORDER_Description(const cl_channel_order value);
+const char * clut_get_CL_CHANNEL_TYPE_Description(const cl_channel_type value);
+const char * clut_get_CL_IMAGE_TYPE_Description(const cl_mem_object_type value);
+
+/* standard types */
+void clut_info_print_String(const void * const value);
+void clut_info_print_Int(const void * const value);
+void clut_info_print_Float(const void * const value);
+void clut_info_print_Double(const void * const value);
+void clut_info_print_SIZE_T(const void * const value);
+void clut_info_print_SIZE_T_nanoseconds(const void * const value);
+void clut_info_print_SIZE_T_pixels(const void * const value);
+/* OpenCL types */
+void clut_info_print_CL_BOOL(const void * const value);
+void clut_info_print_CL_DEVICE_MEM_CACHE_TYPE(const void * const value);
+void clut_info_print_CL_DEVICE_TYPE(const void * const value);
+void clut_info_print_CL_UINT(const void * const value);
+void clut_info_print_CL_UINT_bits(const void * const value);
+void clut_info_print_CL_UINT_bytes(const void * const value);
+void clut_info_print_CL_UINT_hertz(const void * const value);
+void clut_info_print_CL_ULONG_bytes(const void * const value);
+/* platform and device names from IDs */
+void clut_info_print_CL_DEVICE_NAME_from_ID(const void * const value);
+void clut_info_print_CL_PLATFORM_NAME_from_ID(const void * const value);
+/* Bit fields */
+void clut_info_print_CL_COMMAND_QUEUE_PROPERTIES(const void * const value);
+void clut_info_print_CL_DEVICE_AFFINITY_DOMAIN(const void * const value);
+void clut_info_print_CL_DEVICE_EXEC_CAPABILITIES(const void * const value);
+void clut_info_print_CL_DEVICE_FP_CONFIG(const void * const value);
+void clut_info_print_CL_DEVICE_MEM_CACHE_TYPE(const void * const value);
+void clut_info_print_CL_DEVICE_LOCAL_MEM_TYPE(const void * const value);
+/* Vectors */
+void clut_info_print_CL_DEVICE_PARTITION_PROPERTIES(const void * const value, const size_t size);
+void clut_info_print_CL_DEVICE_MAX_WORK_ITEM_SIZES(const void * const value, const size_t size);
+/* image format matrix */
+void clut_print_CL_IMAGE_FORMAT_matrix(const cl_image_format * const formats, const cl_uint n_formats);
+
 #endif /* mlclut_descriptions_h */
+

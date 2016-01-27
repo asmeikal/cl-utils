@@ -2,30 +2,30 @@
  @file OpenCL 1.2 Utilities Description Functions
  @author Michele Laurenti
  @updated 2015-12-28
- 
+
  @abstract
  A boring and wide set of functions to pretty-print all kinds of informations that can
  be retrieved from OpenCL platforms, devices, contexts, etc.
- 
+
  @discussion
  The functions offered roughly fit into 4 categories:
  1. Descriptive functions (clut_get_*_Description): they require a parameter of the type
- specified in the function name, and return a pointer to a descriptive string of the 
+ specified in the function name, and return a pointer to a descriptive string of the
  given parameter. The pointer doesn't have to be freed.
- 2. Typed printer functions (clut_info_print_*): they require a pointer and, for vector 
+ 2. Typed printer functions (clut_info_print_*): they require a pointer and, for vector
  values, a size, and print what they find at the pointed location according to the type
- specified in the function name. Most of them use the descriptive functions illustrated 
+ specified in the function name. Most of them use the descriptive functions illustrated
  above.
  3. Platform/device info print functions (clut_*Info_typedPrint): they require a cl_*_info
- value describing what to print, a pointer to the value to be printed, and the size of this 
+ value describing what to print, a pointer to the value to be printed, and the size of this
  value. They act as "demultiplexers", finding the right typed printer function according to
  the OpenCL documentation.
  4. All/single platform/device info printers (clut_print*Info): these are the functions
- declared in the header, and allow the user to specify a platform/device or a 
- platform/device and an info. The first group prints all available info for the 
+ declared in the header, and allow the user to specify a platform/device or a
+ platform/device and an info. The first group prints all available info for the
  platform/device, the second group prints just the specified info. The first group uses
  the second.
- 
+
  Other functions include the cl_getErrorDescription function.
  */
 
@@ -48,65 +48,11 @@
 #define DEBUG_CLUT_DESC		"ml_openCL_utilities_descriptions"
 
 /*!
- Local function declaration
- */
-
-void clut_platformInfo_typedPrint(const cl_platform_info info, const void * const value, const size_t size);
-void clut_deviceInfo_typedPrint(const cl_device_info info, const void * const value, const size_t size);
-
-/* describer functions */
-const char * clut_get_CL_PLATFORM_INFO_Description(const cl_platform_info value);
-const char * clut_get_CL_DEVICE_INFO_Description(const cl_device_info value);
-const char * clut_get_CL_COMMAND_QUEUE_PROPERTIES_Description(const cl_command_queue_properties value);
-const char * clut_get_CL_DEVICE_AFFINITY_DOMAIN_Description(const cl_device_affinity_domain value);
-const char * clut_get_CL_DEVICE_EXEC_CAPABILITIES_Description(const cl_device_exec_capabilities value);
-const char * clut_get_CL_DEVICE_FP_CONFIG_Description(const cl_device_fp_config value);
-const char * clut_get_CL_DEVICE_MEM_CACHE_TYPE_Description(const cl_device_mem_cache_type value);
-const char * clut_get_CL_DEVICE_LOCAL_MEM_TYPE_Description(const cl_device_local_mem_type value);
-const char * clut_get_CL_DEVICE_PARTITION_PROPERTY_Description(const cl_device_partition_property value);
-const char * clut_get_CL_DEVICE_TYPE_Description(const cl_device_type value);
-const char * clut_get_CL_CHANNEL_ORDER_Description(const cl_channel_order value);
-const char * clut_get_CL_CHANNEL_TYPE_Description(const cl_channel_type value);
-const char * clut_get_CL_IMAGE_TYPE_Description(const cl_mem_object_type value);
-
-/* standard types */
-void clut_info_print_String(const void * const value);
-void clut_info_print_Int(const void * const value);
-void clut_info_print_Float(const void * const value);
-void clut_info_print_Double(const void * const value);
-void clut_info_print_SIZE_T(const void * const value);
-void clut_info_print_SIZE_T_nanoseconds(const void * const value);
-void clut_info_print_SIZE_T_pixels(const void * const value);
-/* OpenCL types */
-void clut_info_print_CL_BOOL(const void * const value);
-void clut_info_print_CL_DEVICE_MEM_CACHE_TYPE(const void * const value);
-void clut_info_print_CL_DEVICE_TYPE(const void * const value);
-void clut_info_print_CL_UINT(const void * const value);
-void clut_info_print_CL_UINT_bits(const void * const value);
-void clut_info_print_CL_UINT_bytes(const void * const value);
-void clut_info_print_CL_UINT_hertz(const void * const value);
-void clut_info_print_CL_ULONG_bytes(const void * const value);
-/* platform and device names from IDs */
-void clut_info_print_CL_DEVICE_NAME_from_ID(const void * const value);
-void clut_info_print_CL_PLATFORM_NAME_from_ID(const void * const value);
-/* Bit fields */
-void clut_info_print_CL_COMMAND_QUEUE_PROPERTIES(const void * const value);
-void clut_info_print_CL_DEVICE_AFFINITY_DOMAIN(const void * const value);
-void clut_info_print_CL_DEVICE_EXEC_CAPABILITIES(const void * const value);
-void clut_info_print_CL_DEVICE_FP_CONFIG(const void * const value);
-void clut_info_print_CL_DEVICE_MEM_CACHE_TYPE(const void * const value);
-void clut_info_print_CL_DEVICE_LOCAL_MEM_TYPE(const void * const value);
-/* Vectors */
-void clut_info_print_CL_DEVICE_PARTITION_PROPERTIES(const void * const value, const size_t size);
-void clut_info_print_CL_DEVICE_MAX_WORK_ITEM_SIZES(const void * const value, const size_t size);
-/* image format matrix */
-void clut_print_CL_IMAGE_FORMAT_matrix(const cl_image_format * const formats, const cl_uint n_formats);
-
-/*!
  Local variables
  */
 
-static const cl_platform_info platform_infos[] = {
+static const cl_platform_info platform_infos[] =
+{
 	CL_PLATFORM_NAME,
 	CL_PLATFORM_VENDOR,
 	CL_PLATFORM_PROFILE,
@@ -114,7 +60,8 @@ static const cl_platform_info platform_infos[] = {
 	//CL_PLATFORM_EXTENSIONS,
 };
 
-static const cl_device_info device_infos[] = {
+static const cl_device_info device_infos[] =
+{
 	// basic info
 	CL_DEVICE_NAME,
 	CL_DEVICE_TYPE,
@@ -201,7 +148,8 @@ static const cl_device_info device_infos[] = {
 	//CL_DEVICE_EXTENSIONS,
 };
 
-static const cl_device_affinity_domain cl_device_affinity_domains[] = {
+static const cl_device_affinity_domain cl_device_affinity_domains[] =
+{
 	CL_DEVICE_AFFINITY_DOMAIN_NUMA,
 	CL_DEVICE_AFFINITY_DOMAIN_L4_CACHE,
 	CL_DEVICE_AFFINITY_DOMAIN_L3_CACHE,
@@ -210,17 +158,20 @@ static const cl_device_affinity_domain cl_device_affinity_domains[] = {
 	CL_DEVICE_AFFINITY_DOMAIN_NEXT_PARTITIONABLE
 };
 
-static const cl_device_exec_capabilities cl_device_exec_capabilities_array[] = {
+static const cl_device_exec_capabilities cl_device_exec_capabilities_array[] =
+{
 	CL_EXEC_KERNEL,
 	CL_EXEC_NATIVE_KERNEL,
 };
 
-static const cl_command_queue_properties cl_command_queue_properties_array[] = {
+static const cl_command_queue_properties cl_command_queue_properties_array[] =
+{
 	CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,
 	CL_QUEUE_PROFILING_ENABLE,
 };
 
-static const cl_device_fp_config cl_device_fp_configs_array[] = {
+static const cl_device_fp_config cl_device_fp_configs_array[] =
+{
 	CL_FP_DENORM,
 	CL_FP_INF_NAN,
 	CL_FP_ROUND_TO_NEAREST,
@@ -231,7 +182,8 @@ static const cl_device_fp_config cl_device_fp_configs_array[] = {
 	CL_FP_SOFT_FLOAT,
 };
 
-static const cl_channel_type cl_channel_types[] = {
+static const cl_channel_type cl_channel_types[] =
+{
 	CL_SNORM_INT8,
 	CL_SNORM_INT16,
 	CL_UNORM_INT8,
@@ -249,7 +201,8 @@ static const cl_channel_type cl_channel_types[] = {
 	CL_FLOAT,
 };
 
-static const cl_channel_order cl_channel_orders[] = {
+static const cl_channel_order cl_channel_orders[] =
+{
 	CL_R,
 	CL_Rx,
 	CL_A,
@@ -403,7 +356,7 @@ void clut_printDeviceSupportedImageFormats(const cl_device_id device)
  Prints the property retrieved with clGetDeviceInfo and stored in 'result',
  according to its type specified by 'info'.
  @discussion
- The function chooses the right way to display the value stored in 'result' by 
+ The function chooses the right way to display the value stored in 'result' by
  clGetDeviceInfo, according to the documentation of the OpenCL standard, version 1.2
  @param info
  The cl_device_info value that was passed to clGetDeviceInfo.
@@ -412,7 +365,7 @@ void clut_printDeviceSupportedImageFormats(const cl_device_id device)
  @param size
  The value that clGetDeviceInfo stored in 'param_value_size_ret'.
  @warning
- Not all cl_device_info values require the 'size' parameter: at the time of writing, 
+ Not all cl_device_info values require the 'size' parameter: at the time of writing,
  it's required only by CL_DEVICE_MAX_WORK_ITEM_SIZES and CL_DEVICE_PARTITION_PROPERTIES.
  */
 void clut_deviceInfo_typedPrint(const cl_device_info info,
@@ -651,7 +604,7 @@ void clut_info_print_SIZE_T(const void * const value)
 /*!
  @function clut_info_print_SIZE_T_nanoseconds
  @abstract
- Prints the memory pointed by 'value' as a size_t, followed by the "ns" ("nanoseconds") 
+ Prints the memory pointed by 'value' as a size_t, followed by the "ns" ("nanoseconds")
  suffix.
  @param value
  Pointer to the size_t that will be printed.
@@ -713,8 +666,8 @@ void clut_info_print_CL_UINT_bits(const void * const value)
 /*!
  @function clut_info_print_CL_UINT_bytes
  @abstract
- Prints the memory pointed by 'value' as a cl_uint representing a byte number. The value is 
- followed by "bytes" if it is less than 1 KB (i.e. 1024U). Otherwise, the nearest unit is 
+ Prints the memory pointed by 'value' as a cl_uint representing a byte number. The value is
+ followed by "bytes" if it is less than 1 KB (i.e. 1024U). Otherwise, the nearest unit is
  found (KB, MB, GB), and the value is shortened and printed accordingly.
  @param value
  Pointer to the cl_uint that will be printed.
@@ -741,8 +694,8 @@ void clut_info_print_CL_UINT_bytes(const void * const value)
 /*!
  @function clut_info_print_CL_UINT_hertz
  @abstract
- Prints the memory pointed by 'value' as a cl_uint representing a frequency in MhZ. The 
- value is followed by "bytes" if it is less than 1 MhZ (i.e. 1000U). Otherwise, the nearest 
+ Prints the memory pointed by 'value' as a cl_uint representing a frequency in MhZ. The
+ value is followed by "bytes" if it is less than 1 MhZ (i.e. 1000U). Otherwise, the nearest
  unit is found (GhZ), and the value is shortened and printed accordingly.
  @param value
  Pointer to the cl_uint that will be printed.
@@ -769,8 +722,8 @@ void clut_info_print_CL_UINT_hertz(const void * const value)
 /*!
  @function clut_info_print_CL_ULONG_bytes
  @abstract
- Prints the memory pointed by 'value' as a cl_ulong representing a byte number. The value 
- is followed by "bytes" if it is less than 1 KB (i.e. 1024UL). Otherwise, the nearest unit 
+ Prints the memory pointed by 'value' as a cl_ulong representing a byte number. The value
+ is followed by "bytes" if it is less than 1 KB (i.e. 1024UL). Otherwise, the nearest unit
  is found (KB, MB, GB, TB, PB), and the value is shortened and printed accordingly.
  @param value
  Pointer to the cl_ulong that will be printed.
@@ -883,12 +836,12 @@ void clut_info_print_CL_PLATFORM_NAME_from_ID(const void * const value)
 /*!
  @function clut_info_print_CL_DEVICE_AFFINITY_DOMAIN
  @abstract
- Displays a value obtained from clGetDeviceInfo with 'param_name' set to 
+ Displays a value obtained from clGetDeviceInfo with 'param_name' set to
  CL_DEVICE_PARTITION_AFFINITY_DOMAIN.
  @discussion
- The documentation states that the result value is a bitfield of type 
+ The documentation states that the result value is a bitfield of type
  cl_device_affinity_domain. If no partition domain is supported, the result value is 0.
- We check each if each possible flag shown in the documentation is active, and display the 
+ We check each if each possible flag shown in the documentation is active, and display the
  corresponding string if the flag is active.
  @param value
  The pointer that was passed as 'param_value' to clGetDeviceInfo.
@@ -920,7 +873,7 @@ void clut_info_print_CL_DEVICE_AFFINITY_DOMAIN(const void * const value)
  CL_DEVICE_EXECUTION_CAPABILITIES.
  @discussion
  The documentation states that the result value is a bitfield of type
- cl_device_exec_capabilities. We check each if each possible flag shown in the 
+ cl_device_exec_capabilities. We check each if each possible flag shown in the
  documentation is active, and display the corresponding string if the flag is active.
  @param value
  The pointer that was passed as 'param_value' to clGetDeviceInfo.
@@ -1030,8 +983,8 @@ void clut_info_print_CL_DEVICE_MAX_WORK_ITEM_SIZES(const void * const value, con
  Displays a value obtained from clGetDeviceInfo with 'param_name' set to
  CL_DEVICE_PARTITION_PROPERTIES.
  @discussion
- The documentation states that the result value is a 'cl_device_partition_property' vector. 
- Thus its length is ('size'/sizeof(cl_device_partition_property)) bytes. The documentation 
+ The documentation states that the result value is a 'cl_device_partition_property' vector.
+ Thus its length is ('size'/sizeof(cl_device_partition_property)) bytes. The documentation
  also states that if the device does not support partition, the returned value is 0.
  @param value
  The pointer that was passed as 'param_value' to clGetDeviceInfo.
@@ -1050,6 +1003,15 @@ void clut_info_print_CL_DEVICE_PARTITION_PROPERTIES(const void * const value, co
 	}
 }
 
+/*!
+ * @function clut_print_CL_IMAGE_FORMAT_matrix
+ * Pretty prints a matrix of channel_data_types x channel_orders. If a couple of
+ * channel_data_type + channel_order is supported, an x will be printed in its cell.
+ * @param formats
+ * An array of cl_image_formats, returned by a call to clGetSupportedImageFormats.
+ * @param n_formats
+ * The number of image_formats in [formats].
+ */
 void clut_print_CL_IMAGE_FORMAT_matrix(const cl_image_format * const formats,
 				       const cl_uint n_formats)
 {
@@ -1664,3 +1626,4 @@ const char * clut_get_CL_IMAGE_TYPE_Description(const cl_mem_object_type value)
 			return "UNKNOWN IMAGE FORMAT";
 	}
 }
+
