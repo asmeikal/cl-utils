@@ -71,7 +71,7 @@ cl_mem clut_loadImageFromFile(cl_context context, const char * const filename, i
 				break;
 			case 2:
 				image_format.image_channel_order = CL_RA;
-				components = 1;
+				components = 2;
 				break;
 			case 3:
 				/* openCL doesn't like plain RGB images
