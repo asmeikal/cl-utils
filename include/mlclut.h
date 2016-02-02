@@ -25,6 +25,8 @@
 		} \
 	} while (0)
 
+#define COMPUTE_GLOBAL_SIZE(size,local)		(((size)/(local) + (((size) % (local) != 0) ? 1 : 0)) * (local))
+
 
 void clut_checkReturn(const char * const function, cl_int value);
 
@@ -43,6 +45,7 @@ void clut_printProgramBuildLog(const cl_program program);
 void clut_contextCallback(const char *errinfo, const void *private_info, size_t private_info_size, void *user_data);
 
 cl_double clut_getEventDuration(cl_event event);
+cl_ulong clut_getEventDuration_ns(cl_event event);
 
 #endif
 

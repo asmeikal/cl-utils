@@ -7,6 +7,7 @@
 #include "mlclut.h"
 #include "mlclut_descriptions.h"
 #include <Debug.h>
+#include <Array.h>
 #include <LineParser.h>
 #include <Vector.h>
 #include <ArrayUtils.h>
@@ -293,46 +294,49 @@ error:	return NULL;
 cl_program clut_createProgramFromFile(cl_context context, const char * const file, const char * const flags)
 {
 	const char * const fname = "clut_createProgramFromFile";
-	cl_program program;
+	cl_program program = NULL;
 	cl_int ret;
+	if (NULL == file) {
+		Debug_out(DEBUG_CLUT, "%s: NULL pointer argument.\n", fname);
+		goto error;
+	}
 
 	/* parse file */
-	char **source = parseLines(file);
-	if (NULL == source) {
-		Debug_out(DEBUG_CLUT, "%s: unable to parse file %s.\n",
-			  fname,
-			  file);
+	Array *lines = parseLines_array(file);
+	if (NULL == lines) {
+		Debug_out(DEBUG_CLUT, "%s: Unable to parse file '%s'.\n", fname, file);
 		goto error;
 	}
 
 	/* create program */
 	program = clCreateProgramWithSource(context,
-					    Vector_length((void **) source),
-					    (const char **) source,
+					    Array_length(lines),
+					    (const char **) Array_as_C_array(lines),
 					    NULL, &ret);
-	if (NULL == program) {
-		Debug_out(DEBUG_CLUT, "%s: unable to create program: %s.\n",
-			  fname,
-			  clut_getErrorDescription(ret));
-		goto clean1;
-	}
 	if (!clut_returnSuccess(ret)) {
 		Debug_out(DEBUG_CLUT, "%s: unable to create program: %s.\n",
 			  fname,
 			  clut_getErrorDescription(ret));
 		goto clean2;
 	}
+	if (NULL == program) {
+		Debug_out(DEBUG_CLUT, "%s: unable to create program: %s.\n",
+			  fname,
+			  clut_getErrorDescription(ret));
+		goto clean1;
+	}
+	Debug_out(DEBUG_CLUT, "%s: Program source created.\n", fname);
 
 	char *build_options;
 	if (NULL != flags) {
-		build_options = calloc(strlen(BUILD_OPTS) + 1 + strlen(flags) + 1, sizeof(char));
+		Debug_out(DEBUG_CLUT, "%s: default options are long %zu, custom options are long %zu.\n", fname, strlen(BUILD_OPTS), strlen(flags));
+		build_options = calloc(strlen(BUILD_OPTS) + 1 + strlen(flags) + 1, 1);
 		if (NULL == build_options) {
 			Debug_out(DEBUG_CLUT, "%s: unable to allocate build options string.\n", fname);
 			goto clean2;
 		}
-		strcat(build_options, BUILD_OPTS);
-		strcat(build_options, " ");
-		strcat(build_options, flags);
+		sprintf(build_options, "%s ", BUILD_OPTS);
+		sprintf(build_options+(strlen(BUILD_OPTS)), "%s", flags);
 	} else {
 		build_options = StringUtils_clone(BUILD_OPTS);
 		if (NULL == build_options) {
@@ -340,6 +344,9 @@ cl_program clut_createProgramFromFile(cl_context context, const char * const fil
 			goto clean2;
 		}
 	}
+	Debug_out(DEBUG_CLUT, "%s: Build flags are: '%s'.\n", fname, build_options);
+	Debug_out(DEBUG_CLUT, "%s: Build options are at %p.\n", fname, build_options);
+	Debug_out(DEBUG_CLUT, "%s: Build options set.\n", fname);
 
 	/* build program */
 	// 0, NULL -> don't build for specific devices
@@ -352,13 +359,16 @@ cl_program clut_createProgramFromFile(cl_context context, const char * const fil
 		clut_printProgramBuildLog(program);
 		goto clean3;
 	}
+	Debug_out(DEBUG_CLUT, "%s: Program built.\n", fname);
 
-	Vector_free((void **) source);
+	free(build_options);
+	Array_free(&lines);
+	Debug_out(DEBUG_CLUT, "%s: Vector freed.\n", fname);
 	return program;
 
 clean3:	free(build_options);
 clean2:	clReleaseProgram(program);
-clean1:	Vector_free((void **) source);
+clean1:	Array_free(&lines);
 error:	return NULL;
 }
 
@@ -527,15 +537,18 @@ error:	return;
  */
 void clut_contextCallback(const char *errinfo, const void *private_info, size_t private_info_size, void *user_data)
 {
+	UNUSED(private_info);
+	UNUSED(private_info_size);
 	// user_data is a const char * with a useful name for the context
 	const char *context_name = (const char *) user_data;
 
-	Debug_out(DEBUG_CLUT, "%s: %s.\n", context_name, errinfo);
+	Debug_out(DEBUG_CLUT, "%s: Printing error information.\n", context_name);
+	fprintf(stderr, "%s\n", errinfo);
 
-	if (0 < private_info_size) {
-		Debug_out(DEBUG_CLUT, "%s: printing %zu additional bytes of stuff.", context_name, private_info_size);
-		full_print(private_info, private_info_size);
-	}
+//	if (0 < private_info_size) {
+//		Debug_out(DEBUG_CLUT, "%s: printing %zu additional bytes of stuff.", context_name, private_info_size);
+//		full_print(private_info, private_info_size);
+//	}
 }
 
 /*!
@@ -544,6 +557,7 @@ void clut_contextCallback(const char *errinfo, const void *private_info, size_t 
  */
 cl_double clut_getEventDuration(cl_event event)
 {
+	const char * const fname = "clut_getEventDuration";
 	cl_ulong start, end;
 	cl_int ret;
 
@@ -552,10 +566,45 @@ cl_double clut_getEventDuration(cl_event event)
 	ret = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
 	CLUT_CHECK_ERROR(ret, "Unable to get end time", error);
 
+	if (end < start) {
+		Debug_out(DEBUG_CLUT, "%s: Event finished before starting..\n", fname);
+		goto error;
+	}
+
+	Debug_out(DEBUG_CLUT, "%s: Event started at %lld, ended at %lld.\n", fname, start, end);
+
 	return (cl_double) (end - start) * ((cl_double) 1e-09);
 
 error:	return (cl_double) 0;
 }
+
+/*!
+ * @function clut_getEventDuration
+ * Returns the duration, in seconds, as a double, of [event].
+ */
+cl_ulong clut_getEventDuration_ns(cl_event event)
+{
+	const char * const fname = "clut_getEventDuration_ns";
+	cl_ulong start, end;
+	cl_int ret;
+
+	ret = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, NULL);
+	CLUT_CHECK_ERROR(ret, "Unable to get start time", error);
+	ret = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, NULL);
+	CLUT_CHECK_ERROR(ret, "Unable to get end time", error);
+
+	if (end < start) {
+		Debug_out(DEBUG_CLUT, "%s: Event finished before starting..\n", fname);
+		goto error;
+	}
+
+	Debug_out(DEBUG_CLUT, "%s: Event started at %lld, ended at %lld.\n", fname, start, end);
+
+	return end - start;
+
+error:	return 0;
+}
+
 
 
 
