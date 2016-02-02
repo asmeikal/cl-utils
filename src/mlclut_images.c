@@ -12,6 +12,9 @@
 #include <stb_image_write.h>
 
 #include <StringUtils.h>
+#include <Debug.h>
+
+#define DEBUG_IMAGES	"mlclut_debug_images"
 
 /*!
  * @function clut_loadImageFromFile
@@ -28,15 +31,16 @@
  * @retun
  * NULL on failure, or a valid cl_image.
  */
-cl_mem clut_loadImageFromFile(cl_context context, const char * const filename, int *width, int *height, cl_bool use_float)
+cl_mem clut_loadImageFromFile(cl_context context, const char * const filename, int *width, int *height)
 {
+	const char * const fname = "clut_loadImageFromFile";
 	if (NULL == filename) {
-		fprintf(stderr, "clut_loadImageFromFile: NULL pointer argument.\n");
+		Debug_out(DEBUG_IMAGES, "%s: NULL pointer argument.\n", fname);
 	}
 	cl_mem result = NULL;
 	int l_width, l_height;
 	unsigned char *img;
-	int ret, is_pgm;
+	int ret, is_pgm, components;
 	cl_int cl_ret;
 
 	cl_image_format image_format = {0, 0};
@@ -47,24 +51,27 @@ cl_mem clut_loadImageFromFile(cl_context context, const char * const filename, i
 		/* pgm image, use demetrescu's micro library */
 		ret = pgm_load(&img, &l_height, &l_width, filename);
 		if (0 != ret) {
-			fprintf(stderr, "Unable to open pgm image '%s'.\n", filename);
+			Debug_out(DEBUG_IMAGES, "%s: Unable to open pgm image '%s'.\n", fname, filename);
 			goto error1;
 		}
 		image_format.image_channel_order = CL_R;
+		components = 1;
 	} else {
 		/* use stb for any other format */
 		int channel_order;
 		img = stbi_load(filename, &l_width, &l_height, &channel_order, 0);
 		if (NULL == img) {
-			fprintf(stderr, "Unable to open image '%s'.\n", filename);
+			Debug_out(DEBUG_IMAGES, "%s: Unable to open image '%s'.\n", fname, filename);
 			goto error1;
 		}
 		switch (channel_order) {
 			case 1:
 				image_format.image_channel_order = CL_R;
+				components = 1;
 				break;
 			case 2:
 				image_format.image_channel_order = CL_RA;
+				components = 1;
 				break;
 			case 3:
 				/* openCL doesn't like plain RGB images
@@ -72,35 +79,40 @@ cl_mem clut_loadImageFromFile(cl_context context, const char * const filename, i
 				stbi_image_free(img);
 				img = stbi_load(filename, &l_width, &l_height, &channel_order, 4);
 				if (NULL == img) {
-					fprintf(stderr, "Unable to open image '%s'.\n", filename);
+					Debug_out(DEBUG_IMAGES, "%s: Unable to open image '%s'.\n", fname, filename);
 					goto error1;
 				}
 				image_format.image_channel_order = CL_RGBA;
+				components = 4;
 				break;
 			case 4:
 				image_format.image_channel_order = CL_RGBA;
+				components = 4;
 				break;
 			default:
-				fprintf(stderr, "Unrecognized stb components number %d.\n", channel_order);
+				Debug_out(DEBUG_IMAGES, "%s: Unrecognized stb components number %d.\n", fname, channel_order);
 				goto error2;
 		}
 	}
-	if (CL_TRUE == use_float) {
-		image_format.image_channel_data_type = CL_UNORM_INT8;
-	} else {
-		image_format.image_channel_data_type = CL_UNSIGNED_INT8;
-	}
+	image_format.image_channel_data_type = CL_UNSIGNED_INT8;
 	image_desc.image_type = CL_MEM_OBJECT_IMAGE2D;
 	image_desc.image_width = l_width;
 	image_desc.image_height = l_height;
+	image_desc.image_row_pitch = l_width * components;
 
-	printf("Opening image with channel order '%s' and data type '%s'.\n",
+	Debug_out(DEBUG_IMAGES, "%s: Opening %d x %d image with channel order '%s' and data type '%s'.\n",
+		fname,
+		l_width,
+		l_height,
 		clut_get_CL_CHANNEL_ORDER_Description(image_format.image_channel_order),
 		clut_get_CL_CHANNEL_TYPE_Description(image_format.image_channel_data_type));
 
 	/* create image */
 	result = clCreateImage(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, &image_format, &image_desc, img, &cl_ret);
 	CLUT_CHECK_ERROR(cl_ret, "Unable to create cl_image", error2);
+	size_t elem_size;
+	cl_ret = clGetImageInfo(result, CL_IMAGE_ELEMENT_SIZE, sizeof(elem_size), &elem_size, NULL);
+	CLUT_CHECK_ERROR(cl_ret, "Unable to get image element size", error1);
 
 	/* set width and height */
 	if (NULL != width) {
@@ -135,8 +147,9 @@ error1:
  */
 void clut_saveImageToFile(const char * const filename, cl_command_queue command_queue, cl_mem image)
 {
+	const char * const fname = "clut_saveImageToFile";
 	if (NULL == filename) {
-		fprintf(stderr, "clut_loadImageFromFile: NULL pointer argument.\n");
+		Debug_out(DEBUG_IMAGES, "%s: NULL pointer argument.\n", fname);
 	}
 	int ret;
 	cl_int cl_ret;
@@ -144,6 +157,7 @@ void clut_saveImageToFile(const char * const filename, cl_command_queue command_
 	size_t width, height;
 	int components, row_size;
 	unsigned char *img;
+	size_t elem_size;
 
 	/* get image width, height, and format */
 	cl_ret = clGetImageInfo(image, CL_IMAGE_WIDTH, sizeof(width), &width, NULL);
@@ -153,19 +167,76 @@ void clut_saveImageToFile(const char * const filename, cl_command_queue command_
 	cl_ret = clGetImageInfo(image, CL_IMAGE_FORMAT, sizeof(cl_image_format), &image_format, NULL);
 	CLUT_CHECK_ERROR(cl_ret, "Unable to get image format", error1);
 
-	/* stb_image_write wants all channels to be encoded as chars */
-	if (
-		(image_format.image_channel_data_type != CL_UNORM_INT8) &&
-		(image_format.image_channel_data_type != CL_SNORM_INT8) &&
-		(image_format.image_channel_data_type != CL_SIGNED_INT8) &&
-		(image_format.image_channel_data_type != CL_UNSIGNED_INT8)
-	) {
-		fprintf(stderr, "Invalid image channel data type '%s'.\n",
+	/* stb_image_write wants all channels to be encoded as unsigned chars */
+	if (image_format.image_channel_data_type != CL_UNSIGNED_INT8) {
+		Debug_out(DEBUG_IMAGES, "%s: Invalid image channel data type '%s'.\n", fname,
 			clut_get_CL_CHANNEL_TYPE_Description(image_format.image_channel_data_type));
 		goto error1;
 	}
 
 	/* choose correct number of components */
+	components = clut_getImageFormatComponents(image_format);
+	if (0 > components) {
+		Debug_out(DEBUG_IMAGES,
+			"%s: Invalid image channel order '%s'.\n",
+			fname,
+			clut_get_CL_CHANNEL_ORDER_Description(image_format.image_channel_order)
+		);
+		goto error1;
+	}
+
+	/* allocate buffer */
+	img = calloc(width * height, components);
+	if (NULL == img) {
+		Debug_out(DEBUG_IMAGES, "%s: Calloc failed.\n", fname);
+		goto error1;
+	}
+
+	Debug_out(DEBUG_IMAGES,
+		"%s: Saving %zu x %zu image with channel order '%s' and data type '%s'.\n",
+		fname,
+		width,
+		height,
+		clut_get_CL_CHANNEL_ORDER_Description(image_format.image_channel_order),
+		clut_get_CL_CHANNEL_TYPE_Description(image_format.image_channel_data_type)
+	);
+
+	/* copy image data to buffer */
+	const size_t origin[3] = {0, 0, 0};
+	const size_t region[3] = {width, height, 1};
+	cl_ret = clEnqueueReadImage(command_queue, image, CL_TRUE, origin, region, width * components, 0, img, 0, NULL, NULL);
+	CLUT_CHECK_ERROR(cl_ret, "Read image failed", error2);
+	clFinish(command_queue);
+	Debug_out(DEBUG_IMAGES, "%s: Image read from device.\n", fname);
+
+	/* save image as png */
+	ret = stbi_write_png(filename, (int) width, (int) height, components, img, width * components);
+	if (0 == ret) {
+		Debug_out(DEBUG_IMAGES, "%s: Write image to file failed.\n", fname);
+		goto error2;
+	}
+	Debug_out(DEBUG_IMAGES, "%s: Image written to file.\n", fname);
+
+error2:
+	free(img);
+error1:
+	return;
+}
+
+/*!
+ * @function clut_getImageFormatComponents
+ * Returns the number of components that an image with [image_format] has.
+ * This is far from perfect.
+ * @param image_format
+ * The image format of the image we'd like to understand better.
+ * @return
+ * A positive integer on success, a negative one on failure.
+ */
+int clut_getImageFormatComponents(cl_image_format image_format)
+{
+	const char * const fname = "clut_getImageFormatComponents";
+	int components = -1;
+
 	switch (image_format.image_channel_order) {
 		case CL_R:
 		case CL_Rx:
@@ -187,42 +258,15 @@ void clut_saveImageToFile(const char * const filename, cl_command_queue command_
 			components = 4;
 			break;
 		default:
-			fprintf(stderr, "Invalid image channel order '%s'.\n",
+			Debug_out(DEBUG_IMAGES,
+				"%s: Unknown image channel order '%s'.\n",
+				fname,
 				clut_get_CL_CHANNEL_ORDER_Description(image_format.image_channel_order));
 			goto error1;
 	}
-	row_size = width * components;
 
-	/* allocate buffer */
-	img = calloc(width * height, components);
-	if (NULL == img) {
-		fprintf(stderr, "Calloc failed.\n");
-		goto error1;
-	}
-
-	printf("Saving image with channel order '%s' and data type '%s'.\n",
-		clut_get_CL_CHANNEL_ORDER_Description(image_format.image_channel_order),
-		clut_get_CL_CHANNEL_TYPE_Description(image_format.image_channel_data_type));
-
-	/* copy image data to buffer */
-	const size_t origin[3] = {0, 0, 0};
-	const size_t region[3] = {width, height, 1};
-	cl_ret = clEnqueueReadImage(command_queue, image, CL_TRUE, origin, region, 0, 0, img, 0, NULL, NULL);
-	CLUT_CHECK_ERROR(cl_ret, "Read image failed", error2);
-	clFinish(command_queue);
-	printf("Image read from device.\n");
-
-	/* save image as png */
-	ret = stbi_write_png(filename, (int) width, (int) height, components, img, row_size);
-	if (0 == ret) {
-		fprintf(stderr, "Write image to file failed.\n");
-		goto error2;
-	}
-
-error2:
-	free(img);
 error1:
-	return;
+	return components;
 }
 
 /*!
