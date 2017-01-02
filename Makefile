@@ -1,7 +1,7 @@
-CC = clang
+CC = gcc
 RM = rm
 
-LIB_MK_PATH = ../libraries
+LIB_MK_PATH = libraries
 include $(LIB_MK_PATH)/mclabutils.mk $(LIB_MK_PATH)/mlutils.mk $(LIB_MK_PATH)/stb_lib.mk
 
 LIB_NAME = mlclut
@@ -39,6 +39,9 @@ LIBRARIES = -L$(LIB_DIR)
 INCLUDES += -I$(MCLAB_INCLUDE) -I$(ML_INCLUDE) -I$(STB_DIR)
 LIBRARIES += -L$(MCLAB_LIB) -L$(ML_LIB)
 
+INCLUDES += -I/usr/include/x86_64-linux-gnu
+LIBRARIES += -L/usr/lib/x86_64-linux-gnu
+
 # compiler and compiler flags
 
 CFLAGS_PRODUCTION = -O2 -DNDEBUG
@@ -46,11 +49,11 @@ CFLAGS = -g -fno-builtin --std=c99 --pedantic --pedantic-errors -Wall -Wextra -W
 
 UNAME = $(shell uname)
 
-ifeq ($(UNAME), Darwin)
-BIN_FLAGS = -framework OpenCL
-else
-BIN_FLAGS = -lOpenCL
-endif
+#ifeq ($(UNAME), Darwin)
+#BIN_FLAGS = -framework OpenCL
+#else
+#BIN_FLAGS = -lOpenCL
+#endif
 
 #CLFAGS += $(CFLAGS_PRODUCTION)
 
@@ -58,7 +61,7 @@ all: $(LIBS) $(TEST_BINS)
 
 $(TEST_BINS): $(LIBS) $(TEST_OBJS)
 	test -d $(TEST_BIN_DIR) || mkdir -p $(TEST_BIN_DIR)
-	$(CC) $(CFLAGS) $(BIN_FLAGS) $(TEST_OBJ_DIR)/$(@F).o $(LIBRARIES) -l$(LIB_NAME) -lmlutils -lMCLabUtils -o $@
+	$(CC) $(CFLAGS) $(BIN_FLAGS) $(TEST_OBJ_DIR)/$(@F).o $(LIBRARIES) -l$(LIB_NAME) -lmlutils -lMCLabUtils -lOpenCL -o $@
 
 $(TEST_OBJS): $(TEST_SRC_DIR)/$(@F:.o=.c)
 	test -d $(TEST_OBJ_DIR) || mkdir -p $(TEST_OBJ_DIR)

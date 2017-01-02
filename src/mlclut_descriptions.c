@@ -217,11 +217,13 @@ static const cl_channel_order cl_channel_orders[] =
 	CL_ARGB,
 	CL_BGRA,
 	// Apple stuff I have on my device
+#ifdef __APPLE__
 	CL_1RGB_APPLE,
 	CL_ABGR_APPLE,
 	CL_BGR1_APPLE,
 	CL_CbYCrY_APPLE,
 	CL_YCbYCr_APPLE,
+#endif
 };
 
 /*!
@@ -1554,6 +1556,7 @@ const char * clut_get_CL_CHANNEL_ORDER_Description(cl_channel_order value)
 			return "ARGB";
 		case CL_BGRA:
 			return "BGRA";
+#ifdef __APPLE__
 		case CL_1RGB_APPLE:
 			return "1RGB Apple";
 		case CL_ABGR_APPLE:
@@ -1564,6 +1567,7 @@ const char * clut_get_CL_CHANNEL_ORDER_Description(cl_channel_order value)
 			return "CbYCrY Apple";
 		case CL_YCbYCr_APPLE:
 			return "YCbYCr Apple";
+#endif
 		default:
 			return "UNKNOWN CHANNEL ORDER";
 	}
